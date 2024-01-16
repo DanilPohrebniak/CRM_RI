@@ -1,0 +1,64 @@
+{% extends 'base_template.html' %}
+
+{% block title %}Add {{ document_type|title }} Item{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="post" action="" class="rounded p-3" style="background-color: #f8f9fa;">
+                    {% csrf_token %}
+
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}" class="font-weight-bold">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+
+                    <h4>Goods Table</h4>
+                    <button type="button" class="btn btn-success btn-sm" id="add-row">Add Row</button>
+                    <table class="table" id="goods-table">
+                        <thead>
+                            <tr>
+                                <th>Good</th>
+                                <th>Unit</th>
+                                <th>Quantity</th>
+                                <th>Sum</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goods-table-body">
+                            <tr>
+                                <td>
+                                    <input type="text" name="good[]" class="form-control name-input" list="good-dropdown" required>
+                                    <datalist id="good-dropdown">
+                                        {% for good in goods %}
+                                            <option value="{{ good.name }}" data-warehouse="{{ good.warehouse }}" data-income="{{ good.income }}">
+                                        {% endfor %}
+                                    </datalist>
+                                </td>
+                                <td><input type="text" name="unit[]" class="form-control" required></td>
+                                <td><input type="number" name="quantity[]" class="form-control" required></td>
+                                <td><input type="number" name="sum[]" class="form-control" required></td>
+                                <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add Bootstrap classes to form fields using JavaScript
+        document.addEventListener('DOMContentLoaded', function () {
+            var formFields = document.querySelectorAll('.form-group input, .form-group select, .form-group textarea');
+            formFields.forEach(function (field) {
+                field.classList.add('form-control', 'rounded');
+            });
+        });
+    </script>
+{% endblock %}

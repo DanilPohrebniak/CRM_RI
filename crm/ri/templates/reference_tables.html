@@ -1,0 +1,26 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block content %}
+    <!-- Add your main content here -->
+    <div class="links-content">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'display_table' 'good' %}">
+                    <img src="{% static 'boxes.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Goods</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'display_table' 'counterparty' %}">
+                    <img src="{% static 'people.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Counterparty</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'display_table' 'warehouse' %}">
+                    <img src="{% static 'warehouse.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Warehouse</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'display_table' 'unit' %}">
+                    <img src="{% static 'weight.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Units of measurement</a>
+            </li>
+        </ul>
+    </div>
+{% endblock %}

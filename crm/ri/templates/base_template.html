@@ -1,0 +1,173 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #F0F0F0;
+            margin: 0; /* Remove default margin */
+        }
+
+        .container-fluid {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            background-color: #EBEBEB;
+            color: #000000;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px; /* Adjust the width as needed */
+            margin-right: 10px; /* Add margin for better separation */
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 100px;
+        }
+
+        .nav-link {
+            color: #000000;
+            font-size: 20px;
+            margin-bottom: 10px;
+
+        }
+
+        .nav-link:hover {
+            color: #ccc;
+        }
+
+        .content {
+            padding: 60px;
+            flex-grow: 1;
+            border-radius: 10px;
+            text-align: center;
+            background-color: #F0F0F0;
+            color: #000000;
+        }
+
+        .links-content {
+            padding: 130px;
+            flex-grow: 1;
+            border-radius: 10px;
+            text-align: left;
+            background-color: #F0F0F0;
+            color: #000000;
+        }
+
+        .welcome-text {
+            margin-bottom: 20px;
+        }
+
+        .logout-link {
+            color: #007bff;
+            padding: 20px;
+            font-size: 20px;
+            display: flex;
+            justify-content: flex-end;
+            margin-right: 25px; /* Adjust the margin as needed */
+        }
+
+        .logout-link:hover {
+            text-decoration: none;
+            color: #0056b3;
+        }
+
+        .menu {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-top: 50px; /* Adjust the value as needed */
+            text-decoration: underline; /* Add this line to underline the text */
+        }
+
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pagination ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+        }
+
+        .pagination li {
+            margin: 0 5px;
+        }
+
+        .pagination a, .pagination .active {
+            padding: 8px 16px;
+            text-decoration: none;
+            color: #007bff;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pagination .disabled {
+            color: #868e96;
+            cursor: not-allowed;
+        }
+
+        .pagination .active {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">CRM</div>
+            <div class="menu">
+                <a class="nav-link" href="{% url 'home' %}">Menu</a>
+            </div>
+
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'display_documents' 'income' %}">
+                        <img src="{% static 'procurement.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Procurement</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'display_documents' 'expense' %}">
+                        <img src="{% static 'cash-register.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Sales</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <img src="{% static 'inventory.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Inventory</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'reference_tables' %}">
+                        <img src="{% static 'research.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;"> Reference tables</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        {% block content %}{% endblock %}
+
+        <!-- Logout link -->
+        <div class="logout-link">
+            <a href="{% url 'login' %}" class="logout-link">
+                Logout <img src="{% static 'logout.png' %}" alt="Logout" width="26" height="26" style="margin-left: 7px;">
+            </a>
+        </div>
+    </div>
+</body>
+</html>
