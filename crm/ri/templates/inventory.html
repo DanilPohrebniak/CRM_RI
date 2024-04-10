@@ -1,0 +1,95 @@
+{% extends 'base_template.html' %}
+{% block content %}
+    <div class="content">
+        <h1>Balance of Goods</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Good</th>
+                    <th>Total Income</th>
+                    <th>Total Expense</th>
+                    <th>Balance</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in goods_balance %}
+                <tr>
+                    <td>{{ item.good }}</td>
+                    <td>{{ item.total_income }}</td>
+                    <td>{{ item.total_expense }}</td>
+                    <td>{{ item.balance }}</td>
+                    <td>
+                        <form method="post" onsubmit="getAdditionalInfo(event, {{ item.good.id }})">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Get Additional Info</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr class="additional-info-row" id="additional-info-{{ item.good.id }}" style="display: none;">
+                    <td colspan="5">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Quantity</th>
+                                    <th>Income/Expense</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="additional-info-body-{{ item.good.id }}"></tbody>
+                        </table>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+   <script>
+        function getAdditionalInfo(event, goodId) {
+            event.preventDefault();
+            var additionalInfoRow = document.getElementById('additional-info-' + goodId);
+            var isVisible = additionalInfoRow.style.display !== 'none';
+
+            if (isVisible) {
+                additionalInfoRow.style.display = 'none';
+            } else {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/ri/inventory/", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                var csrftoken = getCookie('csrftoken');
+                xhr.setRequestHeader('X-CSRFToken', csrftoken);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        var additionalInfo = JSON.parse(xhr.responseText);
+                        var tbody = document.getElementById('additional-info-body-' + goodId);
+                        tbody.innerHTML = '';
+                        additionalInfo.forEach(function (info) {
+                            var row = document.createElement('tr');
+                            row.innerHTML = '<td>' + info.quantity + '</td>' +
+                                            '<td>' + info.income + '</td>' +
+                                            '<td>' + info.date + '</td>';
+                            tbody.appendChild(row);
+                        });
+                        additionalInfoRow.style.display = 'table-row';
+                    }
+                };
+                xhr.send('good_id=' + goodId);
+            }
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+   </script>
+{% endblock %}

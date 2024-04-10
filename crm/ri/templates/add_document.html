@@ -1,5 +1,5 @@
 {% extends 'base_template.html' %}
-
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 {% block title %}Add {{ document_type|title }} Item{% endblock %}
 
 {% block content %}
@@ -22,7 +22,6 @@
                         <thead>
                             <tr>
                                 <th>Good</th>
-                                <th>Unit</th>
                                 <th>Quantity</th>
                                 <th>Sum</th>
                                 <th>Action</th>
@@ -38,7 +37,6 @@
                                         {% endfor %}
                                     </datalist>
                                 </td>
-                                <td><input type="text" name="unit[]" class="form-control" required></td>
                                 <td><input type="number" name="quantity[]" class="form-control" required></td>
                                 <td><input type="number" name="sum[]" class="form-control" required></td>
                                 <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
@@ -53,11 +51,52 @@
     </div>
 
     <script>
-        // Add Bootstrap classes to form fields using JavaScript
         document.addEventListener('DOMContentLoaded', function () {
+            // Add Bootstrap classes to form fields using JavaScript
             var formFields = document.querySelectorAll('.form-group input, .form-group select, .form-group textarea');
             formFields.forEach(function (field) {
                 field.classList.add('form-control', 'rounded');
+            });
+
+            // Add Row functionality
+            var addRowButton = document.getElementById('add-row');
+            var goodsTableBody = document.getElementById('goods-table-body');
+
+            addRowButton.addEventListener('click', function () {
+                var newRow = document.createElement('tr');
+                newRow.innerHTML = '<td><input type="text" name="good[]" class="form-control name-input" list="good-dropdown" required></td>' +
+                    '<td><input type="number" name="quantity[]" class="form-control" required></td>' +
+                    '<td><input type="number" name="sum[]" class="form-control" required></td>' +
+                    '<td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>';
+
+                goodsTableBody.appendChild(newRow);
+            });
+
+            // Delete Row functionality
+            goodsTableBody.addEventListener('click', function (event) {
+                if (event.target.classList.contains('delete-row')) {
+                    var rows = goodsTableBody.getElementsByTagName('tr');
+                    var deletedRow = event.target.closest('tr');
+                    var deletedGoodInput = deletedRow.querySelector('input[name="good[]"]');
+
+                    // Check if there is more than one row and the deleted row is not the first row
+                    if (rows.length > 1 && deletedRow.previousElementSibling) {
+                        // Remove the corresponding option in the datalist
+                        var goodDatalist = document.getElementById('good-dropdown');
+                        var options = goodDatalist.getElementsByTagName('option');
+                        for (var i = 0; i < options.length; i++) {
+                            if (options[i].value === deletedGoodInput.value) {
+                                options[i].remove();
+                                break;
+                            }
+                        }
+
+                        // Remove the row
+                        deletedRow.remove();
+                    } else {
+                        alert('Cannot delete the first row!');
+                    }
+                }
             });
         });
     </script>

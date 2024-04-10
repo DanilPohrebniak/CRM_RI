@@ -1,0 +1,141 @@
+{% extends 'base_template.html' %}
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+{% block title %}Edit {{ document_type|title }} Item{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <form method="post" action="" class="rounded p-3" style="background-color: #f8f9fa;">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label for="id_Date" class="font-weight-bold">Date</label>
+                        <input type="datetime-local" name="Date" class="form-control" id="id_Date" value="{{ document.Date|date:'Y-m-d\TH:i' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_Doctype" class="font-weight-bold">Doctype</label>
+                        <select name="Doctype" id="id_Doctype" class="form-control">
+                            {% for doctype in all_doctypes %}
+                                <option value="{{ doctype.pk }}" {% if document.Doctype.pk == doctype.pk %} selected {% endif %}>{{ doctype }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_Author" class="font-weight-bold">Author</label>
+                        <select name="Author" id="id_Author" class="form-control">
+                            {% for author in all_authors %}
+                                <option value="{{ author.pk }}" {% if document.Author.pk == author.pk %} selected {% endif %}>{{ author }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_Warehouse" class="font-weight-bold">Warehouse</label>
+                        <select name="Warehouse" id="id_Warehouse" class="form-control">
+                            {% for warehouse in all_warehouses %}
+                                <option value="{{ warehouse.pk }}" {% if document.Warehouse.pk == warehouse.pk %} selected {% endif %}>{{ warehouse }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_Counterparty" class="font-weight-bold">Counterparty</label>
+                        <select name="Counterparty" id="id_Counterparty" class="form-control">
+                            {% for counterparty in all_counterparties %}
+                                <option value="{{ counterparty.pk }}" {% if document.Counterparty.pk == counterparty.pk %} selected {% endif %}>{{ counterparty }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_Amount" class="font-weight-bold">Amount</label>
+                        <input type="number" name="Amount" class="form-control" id="id_Amount" value="{{ document.Amount }}" required>
+                    </div>
+
+                    <h4>Goods Table</h4>
+                    <table class="table" id="goods-table">
+                        <thead>
+                            <tr>
+                                <th>Good</th>
+                                <th>Quantity</th>
+                                <th>Sum</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goods-table-body">
+                            {% for goods_item in goods_in_stock %}
+                                <tr>
+                                    <td>
+                                        <input type="text" name="good[]" class="form-control name-input" value="{{ goods_item.Good.name }}" list="good-dropdown" required>
+                                        <datalist id="good-dropdown">
+                                            {% for good in goods %}
+                                                <option value="{{ good.name }}" data-warehouse="{{ good.warehouse }}" data-income="{{ good.income }}">
+                                            {% endfor %}
+                                        </datalist>
+                                    </td>
+                                    <td><input type="number" name="quantity[]" class="form-control" value="{{ goods_item.Quantity }}" required></td>
+                                    <td><input type="number" name="sum[]" class="form-control" value="{{ goods_item.Sum }}" required></td>
+                                    <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Add Bootstrap classes to form fields using JavaScript
+            var formFields = document.querySelectorAll('.form-group input, .form-group select, .form-group textarea');
+            formFields.forEach(function (field) {
+                field.classList.add('form-control', 'rounded');
+            });
+
+            // Add Row functionality
+            var addRowButton = document.getElementById('add-row');
+            var goodsTableBody = document.getElementById('goods-table-body');
+
+            addRowButton.addEventListener('click', function () {
+                var newRow = document.createElement('tr');
+                newRow.innerHTML = '<td><input type="text" name="good[]" class="form-control name-input" list="good-dropdown" required></td>' +
+                    '<td><input type="number" name="quantity[]" class="form-control" required></td>' +
+                    '<td><input type="number" name="sum[]" class="form-control" required></td>' +
+                    '<td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>';
+
+                goodsTableBody.appendChild(newRow);
+            });
+
+            // Delete Row functionality
+            goodsTableBody.addEventListener('click', function (event) {
+                if (event.target.classList.contains('delete-row')) {
+                    var rows = goodsTableBody.getElementsByTagName('tr');
+                    var deletedRow = event.target.closest('tr');
+                    var deletedGoodInput = deletedRow.querySelector('input[name="good[]"]');
+
+                    // Check if there is more than one row and the deleted row is not the first row
+                    if (rows.length > 1 && deletedRow.previousElementSibling) {
+                        // Remove the corresponding option in the datalist
+                        var goodDatalist = document.getElementById('good-dropdown');
+                        var options = goodDatalist.getElementsByTagName('option');
+                        for (var i = 0; i < options.length; i++) {
+                            if (options[i].value === deletedGoodInput.value) {
+                                options[i].remove();
+                                break;
+                            }
+                        }
+
+                        // Remove the row
+                        deletedRow.remove();
+                    } else {
+                        alert('Cannot delete the first row!');
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

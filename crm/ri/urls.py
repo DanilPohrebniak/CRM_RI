@@ -15,5 +15,6 @@ urlpatterns = [
     path('add_doc/<str:document_type>/', views.add_document_view, name='add_document_view'),
     path('edit_doc/<str:document_type>/<int:pk>/', views.edit_document_view, name='edit_document_view'),
     path('delete_doc/<str:document_type>/<int:pk>/', views.delete_document_view, name='delete_document_view'),
+    path('inventory/', views.inventory_view, name='inventory_view'),
     # path('', views.home_view, name='home'),
 ]

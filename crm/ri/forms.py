@@ -1,5 +1,5 @@
 from django import forms
-from .models import Warehouse, Unit, Good, Counterparty, Documents, Doctype, Goods_in_stock
+from .models import Warehouse, Unit, Good, Counterparty, Documents, Doctype, Goods_in_stock, User
 
 import datetime
 
@@ -18,11 +18,12 @@ class UnitForm(forms.ModelForm):
 class GoodForm(forms.ModelForm):
     class Meta:
         model = Good
-        fields = ['name', 'unit']
+        fields = ['name']
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['unit'].queryset = Unit.objects.all()
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.fields['unit'].queryset = Unit.objects.all()
+    #     self.fields['name'].widget.attrs.update({'onchange': 'update_unit_field(this.value)'})
 
 
 class CounterpartyForm(forms.ModelForm):
@@ -34,7 +35,7 @@ class CounterpartyForm(forms.ModelForm):
 class GoodsInStockForm(forms.ModelForm):
     class Meta:
         model = Goods_in_stock
-        fields = ['Good', 'Unit', 'Quantity', 'Sum']
+        fields = ['Good', 'Quantity', 'Sum']
 
 
 class DocumentForm(forms.ModelForm):
@@ -49,6 +50,11 @@ class DocumentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         document_type = kwargs.pop('document_type', None)
         super().__init__(*args, **kwargs)
+
+        # Add select fields for Author, Warehouse, Counterparty
+        self.fields['Author'].queryset = User.objects.all()  # Assuming Author field relates to User model
+        self.fields['Warehouse'].queryset = Warehouse.objects.all()
+        self.fields['Counterparty'].queryset = Counterparty.objects.all()
 
         if document_type:
             doctype_object = Doctype.objects.get(name__iexact=document_type)
