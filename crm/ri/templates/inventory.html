@@ -2,6 +2,21 @@
 {% block content %}
     <div class="content">
         <h1>Balance of Goods</h1>
+        <form id="date-filter-form" class="text-center mx-auto mt-5 mb-5">
+            <div class="form-inline justify-content-center">
+                <div class="form-group mr-2">
+                    <label for="start-date" class="mr-2">Start Date:</label>
+                    <input type="date" id="start-date" name="start_date" class="form-control">
+                </div>
+                <div class="form-group mr-2">
+                    <label for="end-date" class="mr-2">End Date:</label>
+                    <input type="date" id="end-date" name="end_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" onclick="filterByDate()">Filter</button>
+                </div>
+            </div>
+        </form>
         <table class="table">
             <thead>
                 <tr>
@@ -12,21 +27,18 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="goods-table-body">
                 {% for item in goods_balance %}
                 <tr>
-                    <td>{{ item.good }}</td>
+                    <td>{{ item.good_name }}</td>
                     <td>{{ item.total_income }}</td>
                     <td>{{ item.total_expense }}</td>
                     <td>{{ item.balance }}</td>
                     <td>
-                        <form method="post" onsubmit="getAdditionalInfo(event, {{ item.good.id }})">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Get Additional Info</button>
-                        </form>
+                        <button onclick="getAdditionalInfo({{ item.good_id }})" class="btn btn-primary">Get Additional Info</button>
                     </td>
                 </tr>
-                <tr class="additional-info-row" id="additional-info-{{ item.good.id }}" style="display: none;">
+                <tr class="additional-info-row" id="additional-info-{{ item.good_id }}" style="display: none;">
                     <td colspan="5">
                         <table class="table">
                             <thead>
@@ -36,7 +48,7 @@
                                     <th>Date</th>
                                 </tr>
                             </thead>
-                            <tbody id="additional-info-body-{{ item.good.id }}"></tbody>
+                            <tbody id="additional-info-body-{{ item.good_id }}"></tbody>
                         </table>
                     </td>
                 </tr>
@@ -44,36 +56,110 @@
             </tbody>
         </table>
     </div>
-   <script>
-        function getAdditionalInfo(event, goodId) {
-            event.preventDefault();
-            var additionalInfoRow = document.getElementById('additional-info-' + goodId);
-            var isVisible = additionalInfoRow.style.display !== 'none';
+    <script>
+        function filterByDate() {
+            var startDate = document.getElementById('start-date').value;
+            var endDate = document.getElementById('end-date').value;
 
-            if (isVisible) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/ri/inventory/", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            var csrftoken = getCookie('csrftoken');
+            xhr.setRequestHeader('X-CSRFToken', csrftoken);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var responseData = JSON.parse(xhr.responseText);
+                    updateTable(responseData.goods_balance);
+                }
+            };
+            xhr.send('start_date=' + startDate + '&end_date=' + endDate);
+        }
+
+        function updateTable(goodsData) {
+            console.log(goodsData);
+            var tbody = document.getElementById('goods-table-body');
+            tbody.innerHTML = '';
+
+            goodsData.forEach(function (item) {
+                var row = document.createElement('tr');
+                row.innerHTML = '<td>' + item.good_name + '</td>' +
+                    '<td>' + item.total_income + '</td>' +
+                    '<td>' + item.total_expense + '</td>' +
+                    '<td>' + item.balance + '</td>' +
+                    '<td>' +
+                    '<button onclick="getAdditionalInfo(' + item.good_id + ')" class="btn btn-primary">Get Additional Info</button>' +
+                    '</td>';
+                tbody.appendChild(row);
+
+                // Добавляем строку с дополнительной информацией
+                var additionalInfoRow = document.createElement('tr');
+                additionalInfoRow.className = 'additional-info-row';
+                additionalInfoRow.id = 'additional-info-' + item.good_id;
                 additionalInfoRow.style.display = 'none';
+
+                var additionalInfoCell = document.createElement('td');
+                additionalInfoCell.colSpan = 5;
+
+                var additionalInfoTable = document.createElement('table');
+                additionalInfoTable.className = 'table';
+
+                var additionalInfoTableHead = document.createElement('thead');
+                additionalInfoTableHead.innerHTML = '<tr>' +
+                                                    '<th>Quantity</th>' +
+                                                    '<th>Income/Expense</th>' +
+                                                    '<th>Date</th>' +
+                                                    '</tr>';
+                additionalInfoTable.appendChild(additionalInfoTableHead);
+
+                var additionalInfoTableBody = document.createElement('tbody');
+                additionalInfoTableBody.id = 'additional-info-body-' + item.good_id;
+
+                additionalInfoTable.appendChild(additionalInfoTableBody);
+                additionalInfoCell.appendChild(additionalInfoTable);
+                additionalInfoRow.appendChild(additionalInfoCell);
+                tbody.appendChild(additionalInfoRow);
+            });
+        }
+
+        function getAdditionalInfo(goodId) {
+            var additionalInfoRow = document.getElementById('additional-info-' + goodId);
+            console.log("We find a var");
+            // Проверяем, существует ли элемент
+            if (additionalInfoRow) {
+                var isVisible = additionalInfoRow.style.display !== 'none';
+                if (isVisible) {
+                    additionalInfoRow.style.display = 'none';
+                } else {
+                    console.log("Start search");
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("POST", "/ri/inventory/", true);
+                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    var csrftoken = getCookie('csrftoken');
+                    xhr.setRequestHeader('X-CSRFToken', csrftoken);
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState === 4 && xhr.status === 200) {
+                            var data = JSON.parse(xhr.responseText);
+                            console.log("Also Finish");
+                            if (data.additional_info.length > 0) {
+                                var tbody = document.getElementById('additional-info-body-' + goodId);
+                                tbody.innerHTML = '';
+                                data.additional_info.forEach(function (info) {
+                                    var row = document.createElement('tr');
+                                    row.innerHTML = '<td>' + info.quantity + '</td>' +
+                                        '<td>' + info.income + '</td>' +
+                                        '<td>' + info.date + '</td>';
+                                    tbody.appendChild(row);
+                                });
+                                additionalInfoRow.style.display = 'table-row';
+                            } else {
+                                additionalInfoRow.style.display = 'none';
+                            }
+                        }
+                    };
+                    xhr.send('good_id=' + goodId);
+                }
             } else {
-                var xhr = new XMLHttpRequest();
-                xhr.open("POST", "/ri/inventory/", true);
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                var csrftoken = getCookie('csrftoken');
-                xhr.setRequestHeader('X-CSRFToken', csrftoken);
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        var additionalInfo = JSON.parse(xhr.responseText);
-                        var tbody = document.getElementById('additional-info-body-' + goodId);
-                        tbody.innerHTML = '';
-                        additionalInfo.forEach(function (info) {
-                            var row = document.createElement('tr');
-                            row.innerHTML = '<td>' + info.quantity + '</td>' +
-                                            '<td>' + info.income + '</td>' +
-                                            '<td>' + info.date + '</td>';
-                            tbody.appendChild(row);
-                        });
-                        additionalInfoRow.style.display = 'table-row';
-                    }
-                };
-                xhr.send('good_id=' + goodId);
+                console.error("Element with id 'additional-info-" + goodId + "' not found.");
             }
         }
 
@@ -91,5 +177,5 @@
             }
             return cookieValue;
         }
-   </script>
+    </script>
 {% endblock %}

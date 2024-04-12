@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import Sum
 from django.http import JsonResponse
+from datetime import datetime
 
 
 def register(request):
@@ -391,24 +392,16 @@ def delete_document_view(request, document_type=None, pk=None):
 
     return render(request, 'delete_document.html', context)
 
+
 def inventory_view(request):
-    if request.method == 'POST' and 'good_id' in request.POST:
-        good_id = request.POST['good_id']
-        goods_info = Goods_in_stock.objects.filter(Good_id=good_id).order_by('-Date')
+    if request.method == 'POST':
+        start_date_str = request.POST.get('start_date', '0001-01-01')
+        end_date_str = request.POST.get('end_date', '3000-01-01')
 
-        additional_info = []
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
 
-        for info in goods_info:
-            additional_info.append({
-                'quantity': info.Quantity,
-                'income': 'Income' if info.Income else 'Expense',
-                'doc': info.Document_id,  # Используем только идентификатор документа
-                'date': info.Date
-            })
-
-        return JsonResponse(additional_info, safe=False)
-    else:
-        goods = Good.objects.all()
+        goods = Good.objects.filter(goods_in_stock__Date__range=[start_date, end_date]).distinct()
         goods_balance = []
 
         for good in goods:
@@ -421,7 +414,64 @@ def inventory_view(request):
             balance = total_income - total_expense
 
             goods_balance.append({
-                'good': good,
+                'good_name': good.name,
+                'good_id': good.id,
+                'total_income': total_income,
+                'total_expense': total_expense,
+                'balance': balance
+            })
+
+        additional_info = []
+        if 'good_id' in request.POST:
+            good_id = request.POST['good_id']
+            goods_info = Goods_in_stock.objects.filter(Good_id=good_id,
+                                                       Date__range=[start_date, end_date]).order_by('-Date')
+
+            for info in goods_info:
+                additional_info.append({
+                    'quantity': info.Quantity,
+                    'income': 'Income' if info.Income else 'Expense',
+                    'doc': info.Document_id,
+                    'date': info.Date
+                })
+
+        data = {
+            'additional_info': additional_info,
+            'goods_balance': goods_balance
+        }
+
+        return JsonResponse(data, safe=False)
+
+    else:
+        start_date_str = request.GET.get('start_date')
+        if start_date_str != None:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        else:
+            start_date_str = '0001-01-01'
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+
+        end_date_str = request.GET.get('end_date')
+        if end_date_str != None:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        else:
+            end_date_str = '3000-01-01'
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+        goods = Good.objects.filter(goods_in_stock__Date__range=[start_date, end_date]).distinct()
+        goods_balance = []
+
+        for good in goods:
+            total_income = \
+                Goods_in_stock.objects.filter(Good=good, Income=True).aggregate(total_income=Sum('Quantity'))[
+                    'total_income'] or 0
+            total_expense = \
+                Goods_in_stock.objects.filter(Good=good, Income=False).aggregate(total_expense=Sum('Quantity'))[
+                    'total_expense'] or 0
+            balance = total_income - total_expense
+
+            goods_balance.append({
+                'good_name': good,
+                'good_id': good.id,
                 'total_income': total_income,
                 'total_expense': total_expense,
                 'balance': balance
